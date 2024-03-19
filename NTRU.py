@@ -25,6 +25,8 @@ References:
 
 """
 
+
+# Add the input arguments
 parser = argparse.ArgumentParser(prog="NTRU Encrypt/Decrypt",\
                                  description=prog_description,\
                                  epilog=prog_epilog,\
@@ -80,52 +82,66 @@ if __name__ == "__main__":
     
     if (args.Gen):
 
+        # Generate a public and private keyfile based on input flags (or lack thereof)
+        
+        # Initialise the class to gen the keys in
         N1 = NTRUdecrypt()
 
+        # Set the parameters based on input flags (or lack thereof)
         if (args.moderate_sec):
             N1.setNpq(N=107,p=3,q=64,df=15,dg=12,d=5)
         elif (args.highest_sec):
             N1.setNpq(N=503,p=3,q=256,df=216,dg=72,d=55)
         else:
             N1.setNpq(N=167,p=3,q=128,df=61,dg=20,d=18)
-
+            
+        # Actually generate and save the public and private keys
         N1.genPubPriv(args.key_name)
 
 
 
     elif (args.Enc_string or args.Enc_file):
 
+        # Encrypt some data using the given public key
+        
+        # First check if the public key file exists
         if not exists(args.key_name+".pub"):
             sys.exit("ERROR : Public key '"+args.key_name+".pub' not found.")
 
+        # We can only have one input to encrypt
         if args.Enc_string and args.Enc_file:
             sys.exit("ERROR : More than one input to encrypt given.")
-
+            
+        # We need an output method specified
         if not args.out_file and not args.out_in_term:
             sys.exit("ERROR : At least one output method must be specified.")
 
+        # Then initialise an encryption class
         E = NTRUencrypt()
 
+        # And read the public key
         E.readPub(args.key_name+".pub")
-
+        
+        # Extract the data to encrypt
         if args.Enc_string:
             to_encrypt = args.Enc_string
         elif args.Enc_file:
-
+            # Need to check if the file exists
             if not exists(args.Enc_file):
                 sys.exit("ERROR : Input file '"+args.Enc_file+"' not found.")
-
+            # If it does then read all the data from it
             with open(args.Enc_file,"r") as f:
                 to_encrypt = "".join(f.readlines())
 
-
+        # Then encrypt the data
         E.encryptString(to_encrypt)
 
+        # And output the encrypted data
         if args.out_in_term:
-
+            # Just print the encrypted data to the terminal
             print(E.Me)
         elif args.out_file:
-
+            # Write the encrypted data to an output file
             with open(args.out_file,"w") as f:
                 f.write(E.Me)
 
@@ -133,36 +149,48 @@ if __name__ == "__main__":
 
     elif (args.Dec_string or args.Dec_file):
 
+        # Decrypt some data using the known private key
+
+        # First check if the private key file exists
         if not exists(args.key_name+".priv"):
             sys.exit("ERROR : Public key '"+args.key_name+".priv' not found.")
 
+        # We can only have one input to decrypt
         if args.Dec_string and args.Dec_file:
             sys.exit("ERROR : More than one input to decrypt given.")
                     
+        # We need an output method specified
         if not args.out_file and not args.out_in_term:
             sys.exit("ERROR : At least one output method must be specified.")
 
+        # Then initialise an decryption class
         D = NTRUdecrypt()
 
+        # And read the public key
         D.readPriv(args.key_name+".priv")
 
-
+        # Extract the data to decrypt
         if args.Dec_string:
             to_decrypt = args.Dec_string
         elif args.Dec_file:
-
+            # Need to check if the file exists
             if not exists(args.Dec_file):
                 sys.exit("ERROR : Input file '"+args.Dec_file+"' not found.")
-
+            # If it does then read all the data from it
             with open(args.Dec_file,"r") as f:
                 to_decrypt = "".join(f.readlines())
 
+        # Then decrypt the string
         D.decryptString(to_decrypt)
         
+        # And output the decrypted data
         if args.out_in_term:
+            # Just print the encrypted data to the terminal
             print(D.M)
         elif args.out_file:
+            # Write the encrypted data to an output file
             with open(args.out_file,"w") as f:
                 f.write(D.M)
+
 
 
